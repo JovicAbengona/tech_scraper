@@ -45,7 +45,6 @@
         $.post(form.attr("action"), tech_string, function(response_data){
             console.log('response_data :>> ', response_data);
             if(response_data.status){
-                form.after("RESULT: ");
                 $("#get_technologies_result").text(JSON.stringify(response_data.result, null, 4));
             }
             else{

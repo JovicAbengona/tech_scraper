@@ -1,7 +1,20 @@
+// Declare libraries and variables
 const express = require("express");
+const port = 3001;
+
+// Start Express App
 const app = express();
 app.use(express.json());
-const port = 3001;
+app.use(express.urlencoded({ extended: false }));
+
+// Set for Views
+app.set("views", __dirname + "/views");
+app.set("view engine", "ejs");
+
+// Routes
+app.get('/', (req, res) => {
+    res.render("index");
+});
 
 app.post('/get_technologies', (req, res) => {
     const technology_list = { 
@@ -88,6 +101,7 @@ app.post('/get_technologies', (req, res) => {
 
     /* Declare object format */
     let result      = { "technology_keyword_count": {}, "total_per_tech_category": {} };
+
     /* Convert string to lowercase*/
     // .replace(/[.,\/!$%\^&\*;:{}=\-_`~()](?!\w)/g,"")
     let tech_string = req.body.tech_string.toLowerCase();
@@ -136,7 +150,8 @@ app.post('/get_technologies', (req, res) => {
         }
     }
 
-    res.json(result);
+    res.header("Content-Type",'application/json');
+    res.send(JSON.stringify({ "input_string": req.body.tech_string, ...result }, null, 4));
 });
 
 app.listen(port, () => {

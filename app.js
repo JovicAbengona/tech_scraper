@@ -94,7 +94,7 @@ app.post('/get_technologies', (req, res) => {
 
     for(let [category, technologies] of Object.entries(technology_list)){
         /* Remove / and ++ from category string */
-        let regex_string = new RegExp(`${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\w)`, 'gi');
+        let regex_string = new RegExp(`\\b${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`, 'gi');
         /* Find category in string */
         let check_match = (tech_string.match(regex_string));
 
@@ -106,7 +106,7 @@ app.post('/get_technologies', (req, res) => {
 
         for(let technology of technologies){
             /* Remove / and ++ from technology string */
-            regex_string = new RegExp(`${technology.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\w)`, 'gi');
+            regex_string = new RegExp(`\\b${technology.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`, 'gi');
             /* Find technology in string */
             check_match = (tech_string.match(regex_string));
 

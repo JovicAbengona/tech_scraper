@@ -21,12 +21,39 @@
             margin: 5px 0;
         }
     </style>
+    <script src="https://code.jquery.com/jquery-3.6.1.js" integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>
 </head>
 <body>
-    <form action="get_technologies" method="POST">
+    <form id="get_technologies" action="/get_technologies" method="POST">
         <label for="tech_string">Say something:</label>
         <textarea id="tech_string" name="tech_string" rows=15 autofocus></textarea>
         <button type="submit">Submit</button>
     </form>
+    <pre id="get_technologies_result"></pre>
 </body>
+<script>
+    $(document).ready(function(){
+        $("body")
+            .on("submit", "#get_technologies", getTechnologies);
+    });
+
+    function getTechnologies(e){
+        e.preventDefault();
+        const form = $(this);
+        const tech_string = form.serialize();
+
+        $.post(form.attr("action"), tech_string, function(response_data){
+            console.log('response_data :>> ', response_data);
+            if(response_data.status){
+                form.after("RESULT: ");
+                $("#get_technologies_result").text(JSON.stringify(response_data.result, null, 4));
+            }
+            else{
+                alert(response_data.error);
+            }
+        }, "json");
+
+        return false;
+    }
+</script>
 </html>

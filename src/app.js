@@ -17,6 +17,8 @@ app.get('/', (req, res) => {
 });
 
 app.post('/get_technologies', (req, res) => {
+    let response_data = { "status": false, "result": {}, "error": null };
+
     const technology_list = { 
         "client side": [ 
             "bootstrap", "knockout", "xhtml", "preact", "patternfly", "dhtml", "postcss", "ajax", "vue", "scss", "responsive design", "material design", "angular", "haml", "mithril", "xpath",
@@ -100,56 +102,62 @@ app.post('/get_technologies', (req, res) => {
     }
 
     /* Declare object format */
-    let result      = { "technology_keyword_count": {}, "total_per_tech_category": {} };
+    let result = { "technology_keyword_count": {}, "total_per_tech_category": {} };
 
-    /* Convert string to lowercase*/
-    let tech_string = req.body.tech_string.toLowerCase();
+    try {
+        /* Convert string to lowercase*/
+        let tech_string = req.body.tech_string.toLowerCase();
 
-    for(let [category, technologies] of Object.entries(technology_list)){
-        /* Remove / and ++ from category string */
-        let regex_string = new RegExp(`\\b${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`, 'gi');
-        /* Find category in string */
-        let check_match = (tech_string.match(regex_string));
+        for(let [category, technologies] of Object.entries(technology_list)){
+            /* Remove / and ++ from category string */
+            let regex_string = new RegExp(`\\b${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`, 'gi');
+            /* Find category in string */
+            let check_match = (tech_string.match(regex_string));
 
-        /* Check if category is found in string */
-        if(check_match){
-            result["total_per_tech_category"][category] = { "total_count": check_match.length, "breakdown": { [`${category}`]: check_match.length }};
-        }
-
-        for(let technology of technologies){
-            /* Remove / and ++ from technology string */
-            regex_string = new RegExp(`\\b${technology.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`, 'gi');
-            /* Find technology in string */
-            check_match = (tech_string.match(regex_string));
-
-            /* Check if technology is found in string */
+            /* Check if category is found in string */
             if(check_match){
-                result["technology_keyword_count"][technology] = check_match.length;
-                
-                /* Check if technology in technologies list of category */
-                if(technologies.includes(technology)){
-                    if(category in result["total_per_tech_category"]){
-                        /* Only add technology count to category total_count if technology is not yet in the breakdown */
-                        if(!(technology in result["total_per_tech_category"][category]["breakdown"])){
-                            result["total_per_tech_category"][category]["total_count"] += check_match.length ;
-                        }
-                    }
-                    else{
-                        result["total_per_tech_category"][category] = { "total_count": check_match.length };
-                    }
+                result["total_per_tech_category"][category] = { "total_count": check_match.length, "breakdown": { [`${category}`]: check_match.length }};
+            }
 
-                    /* Add technology in category breadown */
-                    result["total_per_tech_category"][category]["breakdown"] = { 
-                        ...result["total_per_tech_category"][category]["breakdown"],
-                        [`${technology}`]: check_match.length 
-                    };
+            for(let technology of technologies){
+                /* Remove / and ++ from technology string */
+                regex_string = new RegExp(`\\b${technology.replace(/[/]/g,"\\b|\\b").replace(/[+]/g,"\\+")}\\b`, 'gi');
+                /* Find technology in string */
+                check_match = (tech_string.match(regex_string));
+
+                /* Check if technology is found in string */
+                if(check_match){
+                    result["technology_keyword_count"][technology] = check_match.length;
+                    
+                    /* Check if technology in technologies list of category */
+                    if(technologies.includes(technology)){
+                        if(category in result["total_per_tech_category"]){
+                            /* Only add technology count to category total_count if technology is not yet in the breakdown */
+                            if(!(technology in result["total_per_tech_category"][category]["breakdown"])){
+                                result["total_per_tech_category"][category]["total_count"] += check_match.length ;
+                            }
+                        }
+                        else{
+                            result["total_per_tech_category"][category] = { "total_count": check_match.length };
+                        }
+
+                        /* Add technology in category breadown */
+                        result["total_per_tech_category"][category]["breakdown"] = { 
+                            ...result["total_per_tech_category"][category]["breakdown"],
+                            [`${technology}`]: check_match.length 
+                        };
+                    }
                 }
             }
         }
+
+        response_data["status"] = true;
+        response_data["result"] = result;
+    } catch (error) {
+        response_data["error"] = error;
     }
 
-    res.header("Content-Type",'application/json');
-    res.send(JSON.stringify(result, null, 4));
+    res.json(response_data);
 });
 
 app.listen(port, () => {

@@ -6,7 +6,7 @@ const port = 3001;
 app.post('/get_technologies', (req, res) => {
     const technology_list = { 
         "client side": [ 
-            "html", "css", "bootstrap", "knockout", "xhtml", "preact", "patternfly", "dhtml", "postcss", "ajax", "vue", "scss", "responsive design", "material design", "angular", "haml", "mithril", "xpath",
+            "bootstrap", "knockout", "xhtml", "preact", "patternfly", "dhtml", "postcss", "ajax", "vue", "scss", "responsive design", "material design", "angular", "haml", "mithril", "xpath",
             "json", "jquery", "less", "backbone", "react", "ember", "xml", "polymer", "api", "webrtc", "mean", "yui", "zeptojs", "dojo toolkit", "underscore.js", "angular.js", "cappuccino",
             "javascript mvc", "spice.js", "riot.js", "canjs", "handlebars", "dust.js", "gsap", "velocity.js", "bounce.js", "tweenjs", "move.js", "snap.svg", "rekapi", "favico.js", "textillate.js",
             "motio", "anima.js", "melonjs", "impactjs", "limejs", "crafty", "cocos2d-html5", "phaser", "goo", "lycheejs", "quintus", "kiwijs", "pandajs", "rot.js", "isogenic", "whitestormjs"
@@ -26,7 +26,7 @@ app.post('/get_technologies', (req, res) => {
             "aptana studio 3", "sublime", "notepad++", "atom", "visual studio code", "eclipse", "light table", "rj texted ", "rubymine", "androidstudio", "code blocks", "cordova", "cloud9 ide", "sourcelair", "phpedit", "bluej" 
         ],
         "server side": [ 
-            "spring", "persistence.js", "pytest", "ruby on rails", "lamp", "phalcon", "django", "struts", "asp.net", "cppcms", "node", "node.js", "ramaze", "laravel", "yii", "flask", ".net core", "silicon", "express",
+            "spring", "persistence.js", "pytest", "ruby on rails", "lamp", "phalcon", "django", "struts", "asp.net", "cppcms", "node", "ramaze", "laravel", "yii", "flask", ".net core", "silicon", "express",
             "padrino", "codeigniter", "kohana", "cherrypy", "spark", ".net", "treefrog", "sails.js", "hanami", "cakephp", "phpixie", "tornado", "apache sling", "nancyfx", "oat++", "koa", "plezi", "zend", "limonade",
             "grok", "appfuse", "mono", "drogon", "socket.io", "camping", "symfony", "hazaar", "grails", "vaadin", "service stack", "sinatra", "fuelphp", "li3", "pyramid", "micronaut", "nette", "lumen", "turbo gears",
             "zkoss", "slim", "silex", "sanic", "tapestry", "wicket", "easymock", "jest", "testng", "jmeter", "cppunit", "cucumber", "simpletest", "testflight", "spock", "storyplayer", "cypress", "protractor", "jwalk",
@@ -46,7 +46,7 @@ app.post('/get_technologies', (req, res) => {
         ],
         "web front-end framework": [ "angular", "canjs", "crafty", "ember", "impactjs", "isogenic", "kiwijs", "limejs", "lycheejs", "mithril", "pandajs", "phaser", "preact", "react", "vue", "whitestormjs" ],
         "javascript": [ 
-            "mongoose", "localstorage", "loopback", "sinon", "rollbar", "karma", "intern", "istanbul", "dexterjs", "ava", "persistence.js", "node", "express", "sails.js", "koa", "socket.io", "jest",
+            "mongoose", "localstorage", "loopback", "sinon", "rollbar", "karma", "intern", "istanbul", "dexterjs", "ava", "persistence.js", "jest",
             "cypress", "protractor", "chai", "nightwatch", "mocha", "jasmine", "trackjs", "knockout", "preact", "vue", "angular", "mithril", "jquery", "backbone", "react", "ember", "polymer", "webrtc",
             "mean", "yui", "zeptojs", "dojo toolkit", "underscore.js", "angular.js", "cappuccino", "javascript mvc", "spice.js", "riot.js", "canjs", "handlebars", "dust.js", "gsap", "velocity.js",
             "bounce.js", "tweenjs", "move.js", "snap.svg", "rekapi", "favico.js", "textillate.js", "motio", "anima.js", "melonjs", "impactjs", "limejs", "crafty", "cocos2d-html5", "phaser", "goo",
@@ -86,67 +86,48 @@ app.post('/get_technologies', (req, res) => {
         "android": [ "androidstudio" ]
     }
 
-    let result      = {};
-    let tech_string = req.body.tech_string.toLowerCase().replace(/[.,\/!$%\^&\*;:{}=\-_`~()](?!\w)/g,"").split(" ");    // Convert to lowercase and Convert to array
-    let categories  = Object.keys(technology_list);                                                                     // Create array of categories
-    
-    tech_string.forEach((tech, index) => {
-        for(let [category, technologies] of Object.entries(technology_list)){
-            if(categories.indexOf(tech) >= 0 || technologies.indexOf(tech) >= 0){
-                console.log('\nCATEGORY/TECH: ', tech, `| ${tech} ${tech_string[index+1]}`, `| ${tech_string[index-1]} ${tech} ${tech_string[index+1]}`);
-                console.log("=============> CATEGORY/TECH MATCH: ", tech);
+    /* Declare object format */
+    let result      = { "technology_keyword_count": {}, "total_per_tech_category": {} };
+    /* Convert string to lowercase*/
+    let tech_string = req.body.tech_string.toLowerCase();
+
+    for(let [category, technologies] of Object.entries(technology_list)){
+        /* Remove / and ++ from category string */
+        let regex_string = new RegExp(`${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\s)`, 'gi');
+        /* Find category in string */
+        let check_match = (tech_string.match(regex_string));
+
+        /* Check if category is found in string */
+        if(check_match){
+            result["total_per_tech_category"][category] = check_match.length;
+        }
+
+        for(let technology of technologies){
+            /* Remove / and ++ from technology string */
+            regex_string = new RegExp(`${technology.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\s)`, 'gi');
+            /* Find technology in string */
+            check_match = (tech_string.match(regex_string));
+
+            /* Check if technology is found in string */
+            if(check_match){
+                result["technology_keyword_count"][technology] = check_match.length;
                 
-                // Create new object key if tech is not yet in object
-                if(!(tech in result)){
-                    result[tech] = 1;
+                /* Check if technology in technologies list of category */
+                if(technologies.includes(technology)){
+                    if(category in result["total_per_tech_category"]){
+                        result["total_per_tech_category"][category] += 1;
+                    }
+                    else{
+                        result["total_per_tech_category"][category] = 1;
+                    }
                 }
-                // Increment count of tech in object
-                else{
-                    result[tech] += 1;
-                }
-
-                break;
-            }
-            
-            if(technologies.indexOf(`${tech} ${tech_string[index+1]}`) >= 0){
-                console.log('CATEGORY/TECH: ', tech, `| ${tech} ${tech_string[index+1]}`, `| ${tech_string[index-1]} ${tech} ${tech_string[index+1]}`);
-                console.log("TWO-WORD MATCH: ", `${tech} ${tech_string[index+1]}`);
-                
-                // Create new object key if tech is not yet in object
-                if(!(`${tech} ${tech_string[index+1]}` in result)){
-                    result[`${tech} ${tech_string[index+1]}`] = 1;
-                }
-                // Increment count of tech in object
-                else{
-                    result[`${tech} ${tech_string[index+1]}`] += 1;
-                }
-
-                break;
-            }
-            else if(technologies.indexOf(`${tech_string[index-1]} ${tech} ${tech_string[index+1]}`) >= 0){
-                console.log('CATEGORY/TECH: ', tech, `| ${tech} ${tech_string[index+1]}`, `| ${tech_string[index-1]} ${tech} ${tech_string[index+1]}`);
-                console.log("THREE-WORD MATCH: ", `${tech_string[index-1]} ${tech} ${tech_string[index+1]}`);
-                
-                // Subtract 1 count because this tech triggered break earlier
-                result[tech_string[index-1]] -= 1;
-
-                // Create new object key if tech is not yet in object
-                if(!(`${tech_string[index-1]} ${tech} ${tech_string[index+1]}` in result)){
-                    result[`${tech_string[index-1]} ${tech} ${tech_string[index+1]}`] = 1;
-                }
-                // Increment count of tech in object
-                else{
-                    result[`${tech_string[index-1]} ${tech} ${tech_string[index+1]}`] += 1;
-                }
-
-                break;
             }
         }
-    });
+    }
 
     res.json(result);
 });
-  
+
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+    console.log(`Example app listening on port ${port}`);
 });

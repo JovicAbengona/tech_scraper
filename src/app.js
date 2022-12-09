@@ -103,7 +103,6 @@ app.post('/get_technologies', (req, res) => {
     let result      = { "technology_keyword_count": {}, "total_per_tech_category": {} };
 
     /* Convert string to lowercase*/
-    // .replace(/[.,\/!$%\^&\*;:{}=\-_`~()](?!\w)/g,"")
     let tech_string = req.body.tech_string.toLowerCase();
 
     for(let [category, technologies] of Object.entries(technology_list)){

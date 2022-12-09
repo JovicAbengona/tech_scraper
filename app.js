@@ -89,22 +89,24 @@ app.post('/get_technologies', (req, res) => {
     /* Declare object format */
     let result      = { "technology_keyword_count": {}, "total_per_tech_category": {} };
     /* Convert string to lowercase*/
+    // .replace(/[.,\/!$%\^&\*;:{}=\-_`~()](?!\w)/g,"")
     let tech_string = req.body.tech_string.toLowerCase();
 
     for(let [category, technologies] of Object.entries(technology_list)){
         /* Remove / and ++ from category string */
-        let regex_string = new RegExp(`${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\s)`, 'gi');
+        let regex_string = new RegExp(`${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\w)`, 'gi');
         /* Find category in string */
         let check_match = (tech_string.match(regex_string));
 
         /* Check if category is found in string */
         if(check_match){
-            result["total_per_tech_category"][category] = check_match.length;
+            result["total_per_tech_category"][category] = { "total_count": check_match.length, "breakdown": {}};
+            result["total_per_tech_category"][category]["breakdown"] = { [`${category}`]: check_match.length };
         }
 
         for(let technology of technologies){
             /* Remove / and ++ from technology string */
-            regex_string = new RegExp(`${technology.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\s)`, 'gi');
+            regex_string = new RegExp(`${technology.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b(?!\\w)`, 'gi');
             /* Find technology in string */
             check_match = (tech_string.match(regex_string));
 
@@ -115,11 +117,20 @@ app.post('/get_technologies', (req, res) => {
                 /* Check if technology in technologies list of category */
                 if(technologies.includes(technology)){
                     if(category in result["total_per_tech_category"]){
-                        result["total_per_tech_category"][category] += 1;
+                        /* Only add technology count to category total_count if technology is not yet in the breakdown */
+                        if(!(technology in result["total_per_tech_category"][category]["breakdown"])){
+                            result["total_per_tech_category"][category]["total_count"] += check_match.length ;
+                        }
                     }
                     else{
-                        result["total_per_tech_category"][category] = 1;
+                        result["total_per_tech_category"][category] = { "total_count": check_match.length };
                     }
+
+                    /* Add technology in category breadown */
+                    result["total_per_tech_category"][category]["breakdown"] = { 
+                        ...result["total_per_tech_category"][category]["breakdown"],
+                        [`${technology}`]: check_match.length 
+                    };
                 }
             }
         }

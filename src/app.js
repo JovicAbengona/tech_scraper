@@ -150,7 +150,7 @@ app.post('/get_technologies', (req, res) => {
     }
 
     res.header("Content-Type",'application/json');
-    res.send(JSON.stringify({ "input_string": req.body.tech_string, ...result }, null, 4));
+    res.send(JSON.stringify(result, null, 4));
 });
 
 app.listen(port, () => {

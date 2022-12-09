@@ -113,8 +113,7 @@ app.post('/get_technologies', (req, res) => {
 
         /* Check if category is found in string */
         if(check_match){
-            result["total_per_tech_category"][category] = { "total_count": check_match.length, "breakdown": {}};
-            result["total_per_tech_category"][category]["breakdown"] = { [`${category}`]: check_match.length };
+            result["total_per_tech_category"][category] = { "total_count": check_match.length, "breakdown": { [`${category}`]: check_match.length }};
         }
 
         for(let technology of technologies){

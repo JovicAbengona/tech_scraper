@@ -153,5 +153,5 @@ app.post('/get_technologies', (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
+    console.log(`App Running on port ${port}`);
 });

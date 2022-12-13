@@ -1,6 +1,8 @@
 // Declare libraries and variables
 const express = require("express");
-const port = 3001;
+const ejs     = require("ejs");
+const path    = require("path");
+const port    = 3001;
 
 // Start Express App
 const app = express();
@@ -16,7 +18,7 @@ app.get('/', (req, res) => {
     res.render("index");
 });
 
-app.post('/get_technologies', (req, res) => {
+app.post('/get_technologies', async (req, res) => {
     let response_data = { "status": false, "result": {}, "error": null };
 
     const technology_list = { 
@@ -61,7 +63,7 @@ app.post('/get_technologies', (req, res) => {
         ],
         "web front-end framework": [ "angular", "canjs", "crafty", "ember", "impactjs", "isogenic", "kiwijs", "limejs", "lycheejs", "mithril", "pandajs", "phaser", "preact", "react", "vue", "whitestormjs" ],
         "javascript": [ 
-            "mongoose", "localstorage", "loopback", "sinon", "rollbar", "karma", "intern", "istanbul", "dexterjs", "ava", "persistence.js", "jest",
+            "javascript", "mongoose", "localstorage", "loopback", "sinon", "rollbar", "karma", "intern", "istanbul", "dexterjs", "ava", "persistence.js", "jest",
             "cypress", "protractor", "chai", "nightwatch", "mocha", "jasmine", "trackjs", "knockout", "preact", "vue", "angular", "mithril", "jquery", "backbone", "react", "ember", "polymer", "webrtc",
             "mean", "yui", "zeptojs", "dojo toolkit", "underscore.js", "angular.js", "cappuccino", "javascript mvc", "spice.js", "riot.js", "canjs", "handlebars", "dust.js", "gsap", "velocity.js",
             "bounce.js", "tweenjs", "move.js", "snap.svg", "rekapi", "favico.js", "textillate.js", "motio", "anima.js", "melonjs", "impactjs", "limejs", "crafty", "cocos2d-html5", "phaser", "goo",
@@ -69,11 +71,11 @@ app.post('/get_technologies', (req, res) => {
             "isogenic", "kiwijs", "limejs", "lycheejs", "mithril", "pandajs", "phaser", "preact", "react", "vue", "whitestormjs", "ionic", "nodeclipse", "webstorm", "bluej" 
         ],
         "python": [ 
-            "aiohttp", "gunicorn", "pytest", "django", "flask", "cherrypy", "tornado", "grok", "pyramid", "turbo gears", "sanic", "pytest-bdd", "pytorch", "nltk", "django", "flask", "cherrypy", "tornado",
+            "python", "aiohttp", "gunicorn", "pytest", "django", "flask", "cherrypy", "tornado", "grok", "pyramid", "turbo gears", "sanic", "pytest-bdd", "pytorch", "nltk", "django", "flask", "cherrypy", "tornado",
             "giotto", "pyramid", "turbo gears", "sanic", "pycharm", "python 2", "python 3" 
         ],
         "java": [ 
-            "javaserver faces", "jooq", "mybatis", "ehcache", "jetty", "tomcat", "wildfly", "apache tomee", "glassfish", "java servlets", "blazix", "jvm", "maven", "ant", "spring", "struts", "spark", "apache sling",
+            "java", "javaserver faces", "jooq", "mybatis", "ehcache", "jetty", "tomcat", "wildfly", "apache tomee", "glassfish", "java servlets", "blazix", "jvm", "maven", "ant", "spring", "struts", "spark", "apache sling",
             "appfuse", "grails", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "easymock", "testng", "spock", "jwalk", "loadrunner", "arquillian", "jtest", "mockito", "junit", "sonarqube", "grails", "struts",
             "spring", "spark", "apache sling", "appfuse", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "yourkit", "javafx", "intellij idea", "eclipse" 
         ],
@@ -102,21 +104,30 @@ app.post('/get_technologies', (req, res) => {
     }
 
     /* Declare object format */
-    let result = { "technology_keyword_count": {}, "total_per_tech_category": {} };
+    let detection_results = { "keywords": {}, "categories": {} };
 
     try {
         /* Convert string to lowercase*/
         let tech_string = req.body.tech_string.toLowerCase();
 
         for(let [category, technologies] of Object.entries(technology_list)){
-            /* Remove / and ++ from category string */
-            let regex_string = new RegExp(`\\b${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`, 'gi');
+            /* Check if category has no # or ++ */
+            if(!(category.includes("#")) && !(category.includes("++"))) {
+                /* Remove / and ++ from category string */
+                var category_string = `\\b${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`;
+            }
+            else {
+                /* Remove / and ++ from category string */
+                var category_string = `\\b${category.replace(/[+]/g,"\\+")}`;
+            }
+            
+            let regex_string = new RegExp(category_string, 'gi');
             /* Find category in string */
             let check_match = (tech_string.match(regex_string));
 
             /* Check if category is found in string */
             if(check_match){
-                result["total_per_tech_category"][category] = { "total_count": check_match.length, "breakdown": { [`${category}`]: check_match.length }};
+                detection_results["categories"][category] = { "total_count": check_match.length, [`${category}`]: check_match.length };
             }
 
             for(let technology of technologies){
@@ -127,23 +138,23 @@ app.post('/get_technologies', (req, res) => {
 
                 /* Check if technology is found in string */
                 if(check_match){
-                    result["technology_keyword_count"][technology] = check_match.length;
+                    detection_results["keywords"][technology] = check_match.length;
                     
                     /* Check if technology in technologies list of category */
                     if(technologies.includes(technology)){
-                        if(category in result["total_per_tech_category"]){
+                        if(category in detection_results["categories"]){
                             /* Only add technology count to category total_count if technology is not yet in the breakdown */
-                            if(!(technology in result["total_per_tech_category"][category]["breakdown"])){
-                                result["total_per_tech_category"][category]["total_count"] += check_match.length ;
+                            if(!(technology in detection_results["categories"][category])){
+                                detection_results["categories"][category]["total_count"] += check_match.length ;
                             }
                         }
                         else{
-                            result["total_per_tech_category"][category] = { "total_count": check_match.length };
+                            detection_results["categories"][category] = { "total_count": check_match.length };
                         }
 
                         /* Add technology in category breadown */
-                        result["total_per_tech_category"][category]["breakdown"] = { 
-                            ...result["total_per_tech_category"][category]["breakdown"],
+                        detection_results["categories"][category] = { 
+                            ...detection_results["categories"][category],
                             [`${technology}`]: check_match.length 
                         };
                     }
@@ -151,9 +162,21 @@ app.post('/get_technologies', (req, res) => {
             }
         }
 
+        /* Delete 'others' key if there are no keywords related to it */
+        if("others" in detection_results.categories){
+            if(detection_results.categories.others.total_count === 1){
+                delete detection_results.categories.others
+            }
+        }
+
+        /* Render html to string for keyword and json results */
+        let keyword_result = await ejs.renderFile(path.join(__dirname, 'views/partials/keyword_result.ejs'), { keywords: detection_results.keywords });
+        let json_result    = await ejs.renderFile(path.join(__dirname, 'views/partials/json_result.ejs'), { categories: detection_results.categories });
+
         response_data["status"] = true;
-        response_data["result"] = result;
+        response_data["result"] = { keyword_result, json_result };
     } catch (error) {
+        console.log(error);
         response_data["error"] = error;
     }
 

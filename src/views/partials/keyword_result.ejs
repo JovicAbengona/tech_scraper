@@ -1,0 +1,12 @@
+<% if(Object.keys(keywords).length) { %>
+    <ol compact="compact">
+        <% for(let [keyword, keyword_count] of Object.entries(keywords)){ %>
+            <li>
+                <%= keyword %>
+                <span>- <b><%= keyword_count %></b></span>
+            </li>
+        <% } %>
+    </ol>
+<% } else { %>
+    <p>No results.</p>
+<% } %>

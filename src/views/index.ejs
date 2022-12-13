@@ -4,55 +4,125 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tech-Scraper</title>
+    <title>Technology Detector</title>
     <style>
         body {
-            font-family: Arial, Helvetica, sans-serif;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            background-color: rgb(243, 243, 243);
+            font-size: 16px;
+            margin: 0;
         }
 
-        #tech_string {
-            display: block;
-            padding: 5px;
-            width: 800px;
+        #container {
+            background-color: white;
+            margin: 0 300px;
+            padding: 10px 50px;
+            min-height: 1287px;
         }
 
-        button {
-            padding: 5px;
-            margin: 5px 0;
+        #container > #main_div {
+            display: inline-block;
+            vertical-align: top;
+            width: 65%;
         }
+
+        #container > #main_div > #get_technologies > #tech_string {
+            font-size: 16px;
+            padding: 5px;
+            width: 99%;
+        }
+        
+        #container > #main_div > #keyword_result {
+            border: 1px solid black;
+            border-radius: 5px;
+            min-height: 345px;
+            max-height: 345px;
+            overflow-y: scroll;
+            padding: 5px;
+            width: 99%;
+            margin: 0;
+        }
+
+        #container > #json_result {
+            border: 1px solid black;
+            display: inline-block;
+            border-radius: 5px;
+            overflow-y: scroll;
+            min-height: 1120px;
+            max-height: 1120px;
+            padding: 5px;
+            width: 30%;
+        }
+
+        pre {
+            background-color: rgb(43, 43, 43);
+            color: white;
+            padding: 10px;
+        }
+
+        ol {
+            display: grid;
+            list-style: none;
+            grid-auto-flow: column;
+            grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+            
+            margin:0;
+            padding:0;
+        }
+
+        ol > li {
+            max-width: 200px;
+        }
+
+        /* ol > li > span {
+            margin-right: 20px;
+            float: right;
+        } */
     </style>
     <script src="https://code.jquery.com/jquery-3.6.1.js" integrity="sha256-3zlB5s2uwoUzrXK3BT7AX3FyvojsraNFxCc2vC/7pNI=" crossorigin="anonymous"></script>
 </head>
 <body>
-    <form id="get_technologies" action="/get_technologies" method="POST">
-        <label for="tech_string">Say something:</label>
-        <textarea id="tech_string" name="tech_string" rows=15 autofocus></textarea>
-        <button type="submit">Submit</button>
-    </form>
-    <pre id="get_technologies_result"></pre>
+    <div id="container">
+        <h1>Technology Detector API</h1>
+        <div id="main_div">
+            <form id="get_technologies" action="/get_technologies" method="POST">
+                <textarea id="tech_string" name="tech_string" rows=40 placeholder="Say something" autofocus></textarea>
+            </form>
+            <div id="keyword_result">
+                <h3>Keyword Count</h3>
+                <span></span>
+            </div>
+        </div>
+        <div id="json_result">
+            <h3>JSON Result</h3>
+            <span></span>
+        </div>
+    </div>
+    <script>
+        $(document).ready(function(){
+            $("body")
+                .on("change", "#get_technologies", getTechnologies);
+        });
+    
+        function getTechnologies(e){
+            e.preventDefault();
+            const form = $(this);
+            const tech_string = form.serialize();
+            const get_technologies_result = $("#get_technologies_result");
+    
+            $.post(form.attr("action"), tech_string, function(response_data){
+                if(response_data.status){
+                    $("#keyword_result span").html(response_data.result.keyword_result)
+                    $("#json_result span").html(response_data.result.json_result)
+                }
+                else{
+                    console.log('response_data :>> ', response_data);
+                    // alert(response_data.error);
+                }
+            }, "json");
+    
+            return false;
+        }
+    </script>
 </body>
-<script>
-    $(document).ready(function(){
-        $("body")
-            .on("submit", "#get_technologies", getTechnologies);
-    });
-
-    function getTechnologies(e){
-        e.preventDefault();
-        const form = $(this);
-        const tech_string = form.serialize();
-
-        $.post(form.attr("action"), tech_string, function(response_data){
-            console.log('response_data :>> ', response_data);
-            if(response_data.status){
-                $("#get_technologies_result").text(JSON.stringify(response_data.result, null, 4));
-            }
-            else{
-                alert(response_data.error);
-            }
-        }, "json");
-
-        return false;
-    }
-</script>
 </html>

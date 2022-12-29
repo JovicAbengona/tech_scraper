@@ -1,0 +1,13 @@
+version: "3.2"
+services:
+    viptechnologydetector:
+      container_name: technologydetector-api
+      restart: always
+      build: ./
+      volumes:
+        # This maps our host project files to our container's WORKDIR. Whatever changes we make to our local copy, will reflect those changes in WORKDIR.
+        - ./src:/VIPTechnologyDetector/app/src
+        - ./package.json:/VIPTechnologyDetector/app/package.json
+      command: nodemon app.js
+      ports:
+        - 8001:8001 # App Port

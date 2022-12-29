@@ -2,7 +2,7 @@
 const express = require("express");
 const ejs     = require("ejs");
 const path    = require("path");
-const port    = 3001;
+const port    = 8001;
 
 // Start Express App
 const app = express();
@@ -14,129 +14,162 @@ app.set("views", __dirname + "/views");
 app.set("view engine", "ejs");
 
 // Routes
-app.get('/', (req, res) => {
-    res.render("index");
+app.get('/', (request, response) => {
+    response.render("index");
 });
 
-app.post('/get_technologies', async (req, res) => {
+/** 
+*   DOCU: Scan string provided by user and return a breakdown of technologies (keywords and categories) mentioned in it. <br>
+*   Triggered by sending POST request to /get_technologies <br>
+*   Last updated at: December 29, 2022
+*   @param {object} post_data Requires: tech_string 
+*   @returns {object} response_data { status, error, result: { "keywords": {}, "categories": {} }
+*   @author Jovic
+*/
+app.post('/get_technologies', async (request, response) => {
     let response_data = { "status": false, "result": {}, "error": null };
 
-    const technology_list = { 
-        "client side": [ 
-            "bootstrap", "knockout", "xhtml", "preact", "patternfly", "dhtml", "postcss", "ajax", "vue", "scss", "responsive design", "material design", "angular", "haml", "mithril", "xpath",
-            "json", "jquery", "less", "backbone", "react", "ember", "xml", "polymer", "api", "webrtc", "mean", "yui", "zeptojs", "dojo toolkit", "underscore.js", "angular.js", "cappuccino",
-            "javascript mvc", "spice.js", "riot.js", "canjs", "handlebars", "dust.js", "gsap", "velocity.js", "bounce.js", "tweenjs", "move.js", "snap.svg", "rekapi", "favico.js", "textillate.js",
-            "motio", "anima.js", "melonjs", "impactjs", "limejs", "crafty", "cocos2d-html5", "phaser", "goo", "lycheejs", "quintus", "kiwijs", "pandajs", "rot.js", "isogenic", "whitestormjs"
-        ],
-        "cloud infrastructure": [ "s3" ], 
-        "databases": [ 
-            "rdbms", "nosql", "mysql", "mssql", "postgres", "mariadb", "sqlite", "mongodb", "db2", "redis", "oracle", "hadoop", "cassandra", "hbase", "hive", "dynamodb", "couchbase", "database",
-            "bigquery", "memcached", "t-sql", "mongoose", "javaserver faces", "hobbit", "graphql", "jooq", "etl", "localstorage", "protobuf", "doctrine", "mybatis", "ehcache", "pl/sql" 
-        ],
-        "others": [ 
-            "selenium", "arkit", "webkit", "swiftui", "core animation", "homekit", "ios", "sirikit", "visionkit", "healthkit", "yourkit", "watchkit", "photokit", "core location", "avkit", "storekit",
-            "rxswift", "cocoa", "foundation", "uikit", "eventkitui", "appkit", "cloudkit", "qtkit", "pushkit", "core graphics", "classkit", "glkit", "gamekit", "callkit", "eventkit", "mapkit", "cocoapods",
-            "coredata", "react native", "xamarin", "firebase", "juce", "ultimate++", "ionic", "javafx", "unity", "storyboard", "bitbucket", "github", "svn", "git", "jira", "asana", "maven", "zend studio",
-            "phpstorm", "phprunner", "komodo ide", "pycharm", "xcode", "intellij idea", "rpg maker", "corona sdk", "nativescript", "flutter", "codename one", "rhomobile suite", "coldfusion", "unreal engine",
-            "lumberyard", "godot", "gamemaker", "appgamekit", "cryen1ine", "urho3d", "corona", "cocos2d ", "figma", "adobe xd", "balsamiq", "wireframes", "sketch", "invision", "adobe illustrator", "adobe photoshop",
-            "axure", "craft", "proto.io", "aws codecommit", "gogs", "mercurial", "cvs", "workzone", "scoro", "wrike", "microsoft project", "clickup", "basecamp", "jdeveloper", "nodeclipse", "webstorm", "appcode",
-            "aptana studio 3", "sublime", "notepad++", "atom", "visual studio code", "eclipse", "light table", "rj texted ", "rubymine", "androidstudio", "code blocks", "cordova", "cloud9 ide", "sourcelair", "phpedit", "bluej" 
-        ],
-        "server side": [ 
-            "spring", "persistence.js", "pytest", "ruby on rails", "lamp", "phalcon", "django", "struts", "asp.net", "cppcms", "node", "ramaze", "laravel", "yii", "flask", ".net core", "silicon", "express",
-            "padrino", "codeigniter", "kohana", "cherrypy", "spark", ".net", "treefrog", "sails.js", "hanami", "cakephp", "phpixie", "tornado", "apache sling", "nancyfx", "oat++", "koa", "plezi", "zend", "limonade",
-            "grok", "appfuse", "mono", "drogon", "socket.io", "camping", "symfony", "hazaar", "grails", "vaadin", "service stack", "sinatra", "fuelphp", "li3", "pyramid", "micronaut", "nette", "lumen", "turbo gears",
-            "zkoss", "slim", "silex", "sanic", "tapestry", "wicket", "easymock", "jest", "testng", "jmeter", "cppunit", "cucumber", "simpletest", "testflight", "spock", "storyplayer", "cypress", "protractor", "jwalk",
-            "loadrunner", "codeception", "behat", "kahlan", "peridot", "nunit", "gtest/gmock", "phpspec", "xdebug", "boost.test", "qunit", "bazel", "arquillian", "capybara", "pytest-bdd", "chai", "nightwatch", "jtest",
-            "cxxtest", "rspec", "mettle", "mocha", "tdd", "bdd", "atoum", "mockito", "jasmine", "xunit", "junit", "nsubstitute", "sonarqube", "trackjs", "pytorch", "dlib", "nltk" 
-        ],
-        "servers": [ 
-            "loopback", "server", "http", "amazon aws", "google cloud", "redshift", "mongrel", "jetty", "tomcat", "https", "microsoft azure", "iis", "openstack", "ip", "wildfly", "apache tomee", "dns", "tcp", "aiohttp",
-            "loki", "glassfish", "gunicorn", "nginx", "elasticsearch", "civetweb", "heroku", "java servlets", "blazix", "linux", "passenger", "jvm", "gae", "docker", "vagrant", "kubernetes", "chef", "gradle", "maven",
-            "salt stack", "perforce", "cmake", "sinon", "ant", "urbancode", "mesos", "ansible", "octopus", "jenkins", "cloud foundry", "rollbar", "rackspace", "karma", "intern", "istanbul", "dexterjs", "ava" 
-        ],
-        "web development framework": [ 
-            "mean", "node", "express", "sails.js", "koa", "socket.io", "ruby on rails", "ramaze", "padrino", "hanami", "plezi", "camping", "sinatra", "lamp", "laravel", "codeigniter", "cakephp", "zend", "symfony",
-            "fuelphp", "nette", "slim", "phalcon", "yii", "kohana", "phpixie", "limonade", "hazaar", "li3", "lumen", "silex", "django", "flask", "cherrypy", "tornado", "giotto", "grails", "pyramid", "turbo gears",
-            "sanic", "struts", "spring", "spark", "apache sling", "appfuse", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "asp.net", ".net core", ".net", "nancyfx", "mono", "service stack", "cppcms",
-            "silicon", "treefrog", "oat++", "drogon" 
-        ],
-        "web front-end framework": [ "angular", "canjs", "crafty", "ember", "impactjs", "isogenic", "kiwijs", "limejs", "lycheejs", "mithril", "pandajs", "phaser", "preact", "react", "vue", "whitestormjs" ],
-        "javascript": [ 
-            "javascript", "mongoose", "localstorage", "loopback", "sinon", "rollbar", "karma", "intern", "istanbul", "dexterjs", "ava", "persistence.js", "jest",
-            "cypress", "protractor", "chai", "nightwatch", "mocha", "jasmine", "trackjs", "knockout", "preact", "vue", "angular", "mithril", "jquery", "backbone", "react", "ember", "polymer", "webrtc",
-            "mean", "yui", "zeptojs", "dojo toolkit", "underscore.js", "angular.js", "cappuccino", "javascript mvc", "spice.js", "riot.js", "canjs", "handlebars", "dust.js", "gsap", "velocity.js",
-            "bounce.js", "tweenjs", "move.js", "snap.svg", "rekapi", "favico.js", "textillate.js", "motio", "anima.js", "melonjs", "impactjs", "limejs", "crafty", "cocos2d-html5", "phaser", "goo",
-            "lycheejs", "quintus", "kiwijs", "pandajs", "rot.js", "isogenic", "whitestormjs", "mean", "node", "express", "sails.js", "koa", "socket.io", "angular", "canjs", "crafty", "ember", "impactjs",
-            "isogenic", "kiwijs", "limejs", "lycheejs", "mithril", "pandajs", "phaser", "preact", "react", "vue", "whitestormjs", "ionic", "nodeclipse", "webstorm", "bluej" 
-        ],
-        "python": [ 
-            "python", "aiohttp", "gunicorn", "pytest", "django", "flask", "cherrypy", "tornado", "grok", "pyramid", "turbo gears", "sanic", "pytest-bdd", "pytorch", "nltk", "django", "flask", "cherrypy", "tornado",
-            "giotto", "pyramid", "turbo gears", "sanic", "pycharm", "python 2", "python 3" 
-        ],
-        "java": [ 
-            "java", "javaserver faces", "jooq", "mybatis", "ehcache", "jetty", "tomcat", "wildfly", "apache tomee", "glassfish", "java servlets", "blazix", "jvm", "maven", "ant", "spring", "struts", "spark", "apache sling",
-            "appfuse", "grails", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "easymock", "testng", "spock", "jwalk", "loadrunner", "arquillian", "jtest", "mockito", "junit", "sonarqube", "grails", "struts",
-            "spring", "spark", "apache sling", "appfuse", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "yourkit", "javafx", "intellij idea", "eclipse" 
-        ],
-        "ruby": [ 
-            "hobbit", "mongrel", "ruby on rails", "ramaze", "padrino", "hanami", "plezi", "camping", "sinatra", "rspec", "ruby on rails", "ramaze", "padrino", "hanami", "plezi", "camping", "sinatra", "rubymine" 
-        ],
-        "php": [ 
-            "doctrine", "octopus", "lamp", "phalcon", "laravel", "yii", "codeigniter", "kohana", "cakephp", "phpixie", "zend", "limonade", "symfony", "hazaar", "fuelphp", "li3", "nette", "lumen", "slim", "silex",
-            "simpletest", "storyplayer", "codeception", "behat", "kahlan", "peridot", "phpspec", "xdebug", "atoum", "lamp", "laravel", "codeigniter", "cakephp", "zend", "symfony", "fuelphp", "nette", "slim", "phalcon",
-            "yii", "kohana", "phpixie", "limonade", "hazaar", "li3", "lumen", "silex", "zend studio", "phpstorm", "phprunner", "komodo ide", "rj texted ", "phpedit" 
-        ],
-        "c#": [ 
-            "asp.net", ".net core", ".net", "nancyfx", "mono", "service stack", "nunit", "xunit", "nsubstitute", "asp.net", ".net core", ".net", "nancyfx", "mono", "service stack", "xamarin", "unity" 
-        ],
-        "c++": [ 
-            "loki", "civetweb", "cppcms", "silicon", "treefrog", "oat++", "drogon", "cppunit", "gtest/gmock", "boost.test", "cxxtest", "mettle", "dlib", "cppcms", "silicon", "treefrog", "oat++", "drogon", "juce", "ultimate++" 
-        ],
-        "html/css": [ 
-            "bootstrap", "xhtml", "patternfly", "postcss", "scss", "responsive design", "material design", "haml", "xpath", "less" 
-        ],
-        "swift": [ 
-            "graphql", "testflight", "arkit", "webkit", "swiftui", "core animation", "homekit", "ios", "sirikit", "visionkit", "healthkit", "watchkit", "photokit", "core location", "avkit", "storekit", "rxswift", "cocoa",
-            "foundation", "uikit", "eventkitui", "appkit", "cloudkit", "qtkit", "pushkit", "core graphics", "classkit", "glkit", "gamekit", "callkit", "eventkit", "mapkit", "cocoapods", "coredata", "react native", "storyboard", "xcode" 
-        ],
-        "android": [ "androidstudio" ]
-    }
-
-    /* Declare object format */
-    let detection_results = { "keywords": {}, "categories": {} };
-
     try {
-        /* Convert string to lowercase*/
-        let tech_string = req.body.tech_string.toLowerCase();
+        /* Declare technologies dictionary */
+        const technology_list = { 
+            "client side": [ 
+                "bootstrap", "knockout", "xhtml", "preact", "patternfly", "dhtml", "postcss", "ajax", "vue", "scss", "responsive design", "material design", "angular", "haml", "mithril", "xpath",
+                "json", "jquery", "less", "backbone", "react", "ember", "xml", "polymer", "api", "webrtc", "mean", "yui", "zeptojs", "dojo toolkit", "underscore.js", "angular.js", "cappuccino",
+                "javascript mvc", "spice.js", "riot.js", "canjs", "handlebars", "dust.js", "gsap", "velocity.js", "bounce.js", "tweenjs", "move.js", "snap.svg", "rekapi", "favico.js", "textillate.js",
+                "motio", "anima.js", "melonjs", "impactjs", "limejs", "crafty", "cocos2d-html5", "phaser", "goo", "lycheejs", "quintus", "kiwijs", "pandajs", "rot.js", "isogenic", "whitestormjs"
+            ],
+            "cloud infrastructure": [ "s3" ], 
+            "databases": [ 
+                "rdbms", "nosql", "mysql", "mssql", "postgres", "mariadb", "sqlite", "mongodb", "db2", "redis", "oracle", "hadoop", "cassandra", "hbase", "hive", "dynamodb", "couchbase", "database",
+                "bigquery", "memcached", "t-sql", "mongoose", "javaserver faces", "hobbit", "graphql", "jooq", "etl", "localstorage", "protobuf", "doctrine", "mybatis", "ehcache", "pl/sql" 
+            ],
+            "others": [ 
+                "selenium", "arkit", "webkit", "swiftui", "core animation", "homekit", "ios", "sirikit", "visionkit", "healthkit", "yourkit", "watchkit", "photokit", "core location", "avkit", "storekit",
+                "rxswift", "cocoa", "foundation", "uikit", "eventkitui", "appkit", "cloudkit", "qtkit", "pushkit", "core graphics", "classkit", "glkit", "gamekit", "callkit", "eventkit", "mapkit", "cocoapods",
+                "coredata", "react native", "xamarin", "firebase", "juce", "ultimate++", "ionic", "javafx", "unity", "storyboard", "bitbucket", "github", "svn", "git", "jira", "asana", "maven", "zend studio",
+                "phpstorm", "phprunner", "komodo ide", "pycharm", "xcode", "intellij idea", "rpg maker", "corona sdk", "nativescript", "flutter", "codename one", "rhomobile suite", "coldfusion", "unreal engine",
+                "lumberyard", "godot", "gamemaker", "appgamekit", "cryen1ine", "urho3d", "corona", "cocos2d ", "figma", "adobe xd", "balsamiq", "wireframes", "sketch", "invision", "adobe illustrator", "adobe photoshop",
+                "axure", "craft", "proto.io", "aws codecommit", "gogs", "mercurial", "cvs", "workzone", "scoro", "wrike", "microsoft project", "clickup", "basecamp", "jdeveloper", "nodeclipse", "webstorm", "appcode",
+                "aptana studio 3", "sublime", "notepad++", "atom", "visual studio code", "eclipse", "light table", "rj texted ", "rubymine", "androidstudio", "code blocks", "cordova", "cloud9 ide", "sourcelair", "phpedit", "bluej" 
+            ],
+            "server side": [ 
+                "spring", "persistence.js", "pytest", "ruby on rails", "lamp", "phalcon", "django", "struts", "asp.net", "cppcms", "node", "ramaze", "laravel", "yii", "flask", ".net core", "silicon", "express",
+                "padrino", "codeigniter", "kohana", "cherrypy", "spark", ".net", "treefrog", "sails.js", "hanami", "cakephp", "phpixie", "tornado", "apache sling", "nancyfx", "oat++", "koa", "plezi", "zend", "limonade",
+                "grok", "appfuse", "mono", "drogon", "socket.io", "camping", "symfony", "hazaar", "grails", "vaadin", "service stack", "sinatra", "fuelphp", "li3", "pyramid", "micronaut", "nette", "lumen", "turbo gears",
+                "zkoss", "slim", "silex", "sanic", "tapestry", "wicket", "easymock", "jest", "testng", "jmeter", "cppunit", "cucumber", "simpletest", "testflight", "spock", "storyplayer", "cypress", "protractor", "jwalk",
+                "loadrunner", "codeception", "behat", "kahlan", "peridot", "nunit", "gtest/gmock", "phpspec", "xdebug", "boost.test", "qunit", "bazel", "arquillian", "capybara", "pytest-bdd", "chai", "nightwatch", "jtest",
+                "cxxtest", "rspec", "mettle", "mocha", "tdd", "bdd", "atoum", "mockito", "jasmine", "xunit", "junit", "nsubstitute", "sonarqube", "trackjs", "pytorch", "dlib", "nltk" 
+            ],
+            "servers": [ 
+                "loopback", "server", "http", "amazon aws", "google cloud", "redshift", "mongrel", "jetty", "tomcat", "https", "microsoft azure", "iis", "openstack", "ip", "wildfly", "apache tomee", "dns", "tcp", "aiohttp",
+                "loki", "glassfish", "gunicorn", "nginx", "elasticsearch", "civetweb", "heroku", "java servlets", "blazix", "linux", "passenger", "jvm", "gae", "docker", "vagrant", "kubernetes", "chef", "gradle", "maven",
+                "salt stack", "perforce", "cmake", "sinon", "ant", "urbancode", "mesos", "ansible", "octopus", "jenkins", "cloud foundry", "rollbar", "rackspace", "karma", "intern", "istanbul", "dexterjs", "ava" 
+            ],
+            "web development framework": [ 
+                "mean", "node", "express", "sails.js", "koa", "socket.io", "ruby on rails", "ramaze", "padrino", "hanami", "plezi", "camping", "sinatra", "lamp", "laravel", "codeigniter", "cakephp", "zend", "symfony",
+                "fuelphp", "nette", "slim", "phalcon", "yii", "kohana", "phpixie", "limonade", "hazaar", "li3", "lumen", "silex", "django", "flask", "cherrypy", "tornado", "giotto", "grails", "pyramid", "turbo gears",
+                "sanic", "struts", "spring", "spark", "apache sling", "appfuse", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "asp.net", ".net core", ".net", "nancyfx", "mono", "service stack", "cppcms",
+                "silicon", "treefrog", "oat++", "drogon" 
+            ],
+            "web front-end framework": [ "angular", "canjs", "crafty", "ember", "impactjs", "isogenic", "kiwijs", "limejs", "lycheejs", "mithril", "pandajs", "phaser", "preact", "react", "vue", "whitestormjs" ],
+            "javascript": [ 
+                "javascript", "mongoose", "localstorage", "loopback", "sinon", "rollbar", "karma", "intern", "istanbul", "dexterjs", "ava", "persistence.js", "jest",
+                "cypress", "protractor", "chai", "nightwatch", "mocha", "jasmine", "trackjs", "knockout", "preact", "vue", "angular", "mithril", "jquery", "backbone", "react", "ember", "polymer", "webrtc",
+                "mean", "yui", "zeptojs", "dojo toolkit", "underscore.js", "angular.js", "cappuccino", "javascript mvc", "spice.js", "riot.js", "canjs", "handlebars", "dust.js", "gsap", "velocity.js",
+                "bounce.js", "tweenjs", "move.js", "snap.svg", "rekapi", "favico.js", "textillate.js", "motio", "anima.js", "melonjs", "impactjs", "limejs", "crafty", "cocos2d-html5", "phaser", "goo",
+                "lycheejs", "quintus", "kiwijs", "pandajs", "rot.js", "isogenic", "whitestormjs", "mean", "node", "express", "sails.js", "koa", "socket.io", "angular", "canjs", "crafty", "ember", "impactjs",
+                "isogenic", "kiwijs", "limejs", "lycheejs", "mithril", "pandajs", "phaser", "preact", "react", "vue", "whitestormjs", "ionic", "nodeclipse", "webstorm", "bluej" 
+            ],
+            "python": [ 
+                "python", "aiohttp", "gunicorn", "pytest", "django", "flask", "cherrypy", "tornado", "grok", "pyramid", "turbo gears", "sanic", "pytest-bdd", "pytorch", "nltk", "django", "flask", "cherrypy", "tornado",
+                "giotto", "pyramid", "turbo gears", "sanic", "pycharm", "python 2", "python 3" 
+            ],
+            "java": [ 
+                "java", "javaserver faces", "jooq", "mybatis", "ehcache", "jetty", "tomcat", "wildfly", "apache tomee", "glassfish", "java servlets", "blazix", "jvm", "maven", "ant", "spring", "struts", "spark", "apache sling",
+                "appfuse", "grails", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "easymock", "testng", "spock", "jwalk", "loadrunner", "arquillian", "jtest", "mockito", "junit", "sonarqube", "grails", "struts",
+                "spring", "spark", "apache sling", "appfuse", "vaadin", "micronaut", "zkoss", "tapestry", "wicket", "yourkit", "javafx", "intellij idea", "eclipse" 
+            ],
+            "ruby": [ 
+                "ruby", "hobbit", "mongrel", "ruby on rails", "ramaze", "padrino", "hanami", "plezi", "camping", "sinatra", "rspec", "ruby on rails", "ramaze", "padrino", "hanami", "plezi", "camping", "sinatra", "rubymine" 
+            ],
+            "php": [ 
+                "php", "doctrine", "octopus", "lamp", "phalcon", "laravel", "yii", "codeigniter", "kohana", "cakephp", "phpixie", "zend", "limonade", "symfony", "hazaar", "fuelphp", "li3", "nette", "lumen", "slim", "silex",
+                "simpletest", "storyplayer", "codeception", "behat", "kahlan", "peridot", "phpspec", "xdebug", "atoum", "lamp", "laravel", "codeigniter", "cakephp", "zend", "symfony", "fuelphp", "nette", "slim", "phalcon",
+                "yii", "kohana", "phpixie", "limonade", "hazaar", "li3", "lumen", "silex", "zend studio", "phpstorm", "phprunner", "komodo ide", "rj texted ", "phpedit" 
+            ],
+            "c#": [ 
+                "c#", "asp.net", ".net core", ".net", "nancyfx", "mono", "service stack", "nunit", "xunit", "nsubstitute", "asp.net", ".net core", ".net", "nancyfx", "mono", "service stack", "xamarin", "unity" 
+            ],
+            "c++": [ 
+                "c++", "loki", "civetweb", "cppcms", "silicon", "treefrog", "oat++", "drogon", "cppunit", "gtest/gmock", "boost.test", "cxxtest", "mettle", "dlib", "cppcms", "silicon", "treefrog", "oat++", "drogon", "juce", "ultimate++" 
+            ],
+            "html/css": [ 
+                "html", "css", "bootstrap", "xhtml", "patternfly", "postcss", "scss", "responsive design", "material design", "haml", "xpath", "less" 
+            ],
+            "swift": [ 
+                "swift", "graphql", "testflight", "arkit", "webkit", "swiftui", "core animation", "homekit", "ios", "sirikit", "visionkit", "healthkit", "watchkit", "photokit", "core location", "avkit", "storekit", "rxswift", "cocoa",
+                "foundation", "uikit", "eventkitui", "appkit", "cloudkit", "qtkit", "pushkit", "core graphics", "classkit", "glkit", "gamekit", "callkit", "eventkit", "mapkit", "cocoapods", "coredata", "react native", "storyboard", "xcode" 
+            ],
+            "android": [ "android", "androidstudio" ]
+        }
 
+        /* Declare object result format */
+        let detection_results = { "keywords": {}, "categories": {} };
+
+        /* Convert string to lowercase */
+        let tech_string = request.body.tech_string.toLowerCase();
+
+        /*
+            DOCU: Loop through keys and values in technology_list object.
+            Create custom regex for each. Some keywords/technologies that has special characters (e.g. c#, c++)
+            will have a modified regex to get more accurate result.
+        */
         for(let [category, technologies] of Object.entries(technology_list)){
             /* Check if category has no # or ++ */
             if(!(category.includes("#")) && !(category.includes("++"))) {
                 /* Remove / and ++ from category string */
-                var category_string = `\\b${category.replace(/[/]/g,"|").replace(/[+]/g,"\\+")}\\b`;
+                var category_string = `\\b${category.replace(/[/]/g,"\b|\b").replace(/[+]/g,"\\+")}\\b`;
             }
             else {
                 /* Remove / and ++ from category string */
                 var category_string = `\\b${category.replace(/[+]/g,"\\+")}`;
             }
             
+            /* 
+                DOCU: Create regex using category and match it to tech_string provided by user.
+                If there is a match, add it to detection_results["categories"] and how many times did it occur.
+            */
             let regex_string = new RegExp(category_string, 'gi');
-            /* Find category in string */
-            let check_match = (tech_string.match(regex_string));
-
-            /* Check if category is found in string */
+            let check_match  = (tech_string.match(regex_string));
+            
             if(check_match){
                 detection_results["categories"][category] = { "total_count": check_match.length, [`${category}`]: check_match.length };
             }
 
+            /* 
+                DOCU: Loop through values in techlogies array.
+                Create custom regex for each. Some keywords/technologies that has special characters (e.g. c#, c++)
+                will have a modified regex to get more accurate result.
+            */
             for(let technology of technologies){
-                /* Remove / and ++ from technology string */
-                regex_string = new RegExp(`\\b${technology.replace(/[/]/g,"\\b|\\b").replace(/[+]/g,"\\+")}\\b`, 'gi');
-                /* Find technology in string */
+                /* Check if technology has no # or ++ */
+                if(!(technology.includes("#")) && !(technology.includes("++"))) {
+                    /* Remove / and ++ from technology string */
+                    var technology_string = `\\b${technology.replace(/[/]/g,"\b|\b").replace(/[+]/g,"\\+")}\\b`;
+                }
+                else {
+                    /* Remove / and ++ from technology string */
+                    var technology_string = `\\b${technology.replace(/[+]/g,"\\+")}`;
+                }
+
+                /* 
+                    DOCU: Create regex using technology and match it to tech_string provided by user.
+                    If there is a match, add it to detection_results["keywords"] and detection_results["categories"],
+                    and how many times did it occur.
+                */
+                regex_string = new RegExp(technology_string, 'gi');
                 check_match = (tech_string.match(regex_string));
 
-                /* Check if technology is found in string */
                 if(check_match){
                     detection_results["keywords"][technology] = check_match.length;
                     
@@ -162,13 +195,6 @@ app.post('/get_technologies', async (req, res) => {
             }
         }
 
-        /* Delete 'others' key if there are no keywords related to it */
-        if("others" in detection_results.categories){
-            if(detection_results.categories.others.total_count === 1){
-                delete detection_results.categories.others
-            }
-        }
-
         /* Render html to string for keyword and json results */
         let keyword_result = await ejs.renderFile(path.join(__dirname, 'views/partials/keyword_result.ejs'), { keywords: detection_results.keywords });
         let json_result    = await ejs.renderFile(path.join(__dirname, 'views/partials/json_result.ejs'), { categories: detection_results.categories });
@@ -180,9 +206,9 @@ app.post('/get_technologies', async (req, res) => {
         response_data["error"] = error;
     }
 
-    res.json(response_data);
+    response.json(response_data);
 });
 
 app.listen(port, () => {
-    console.log(`App Running on port ${port}`);
+    console.log(`App Running on: http://localhost:${port}`);
 });

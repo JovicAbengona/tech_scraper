@@ -104,8 +104,17 @@
                 .on("change", "#get_technologies", getTechnologies);
         });
     
+        /** 
+        *   DOCU: Send a POST request to start scanning for technologies. <br>
+        *   Triggered by .on("change", "#get_technologies") <br>
+        *   Last updated at: December 29, 2022
+        *   @param {object} Requires: tech_string 
+        *   @returns {object} response_data { status, error, result: { keyword_result, json_result }
+        *   @author Jovic
+        */
         function getTechnologies(e){
             e.preventDefault();
+
             const form = $(this);
     
             $.post(form.attr("action"), form.serialize(), function(response_data){

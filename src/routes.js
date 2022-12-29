@@ -5,6 +5,7 @@ const Technologies = require("./controllers/Technologies");
 
 Router.use(Express.urlencoded({ extended: false }));
 
+/* Endpoints */
 Router.get("/", Technologies.index);
 Router.post("/get_technologies", Technologies.detect_technologies);
 

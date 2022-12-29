@@ -6,5 +6,6 @@ npm install
 ## Usage
 
 ```bash
-npm run dev
+docker-compose build
+docker-compose up
 ```

@@ -1,11 +1,10 @@
 ## Installation
 ```bash
-npm install
+docker-compose build
 ```
 
 ## Usage
 
 ```bash
-docker-compose build
 docker-compose up
 ```
